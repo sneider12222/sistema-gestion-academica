@@ -6,7 +6,7 @@ local (localhost), como lo define el documento.
 
 ## Cómo ejecutarlo
 
-Requiere Python 3.10 o superior.
+Requiere Python 3.10 o superior. La guía paso a paso para otro computador está en [INSTALACION.md](INSTALACION.md).
 
 ```bash
 py -m pip install -r requirements.txt

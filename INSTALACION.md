@@ -33,12 +33,12 @@ los pasos de esta guía.
 **Opción A, con Git:**
 
 ```bash
-git clone URL_DEL_REPOSITORIO
+git clone https://github.com/sneider12222/sistema-gestion-academica.git
 ```
 
-Esto crea una carpeta con el nombre del repositorio.
+Esto crea la carpeta `sistema-gestion-academica`.
 
-**Opción B, sin Git:** en la página del repositorio en GitHub pulse **Code → Download ZIP**, y descomprima
+**Opción B, sin Git:** entre a <https://github.com/sneider12222/sistema-gestion-academica>, pulse **Code → Download ZIP**, y descomprima
 el archivo en una carpeta, por ejemplo en `Documentos`.
 
 ## 4. Instalar las dependencias
