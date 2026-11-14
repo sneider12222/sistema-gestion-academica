@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block titulo %}{{ 'Editar' if u else 'Crear' }} usuario{% endblock %}
+{% block contenido %}
+{% set rol_actual = u.rol if u else form.get('rol', 'estudiante') %}
+{% macro valor(campo) %}{{ form.get(campo, u[campo] if u else '') or '' }}{% endmacro %}
+<h1>{{ 'Editar usuario' if u else 'Crear usuario' }}</h1>
+<form method="post" class="tarjeta formulario">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="rejilla dos">
+    <label>Nombre completo <input name="nombre" value="{{ valor('nombre') }}" required></label>
+    <label>Documento <input name="documento" value="{{ valor('documento') }}"></label>
+    <label>Correo electrónico <input type="email" name="email" value="{{ valor('email') }}"></label>
+    <label>Nombre de usuario <input name="usuario" value="{{ valor('usuario') }}" autocomplete="off" required></label>
+    <label>Rol
+      <select name="rol" id="rol" {% if u %}disabled{% endif %}>
+        {% for r in roles %}<option value="{{ r }}" {% if r == rol_actual %}selected{% endif %}>{{ r|capitalize }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ 'Nueva contraseña (opcional)' if u else 'Contraseña' }}
+      <input type="password" name="clave" minlength="8" autocomplete="new-password" {% if not u %}required{% endif %}>
+      <small class="tenue">Mínimo 8 caracteres.</small>
+    </label>
+  </div>
+
+  <label data-rol="estudiante">Grado
+    <select name="grado_id">
+      <option value="">Sin grado</option>
+      {% for gr in grados %}
+        <option value="{{ gr.id }}" {% if (form.get('grado_id') or (u.grado_id if u else ''))|string == gr.id|string %}selected{% endif %}>{{ gr.nombre }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <fieldset data-rol="acudiente">
+    <legend>Estudiantes a cargo (acudidos)</legend>
+    <div class="casillas">
+      {% for e in estudiantes %}
+        <label class="casilla"><input type="checkbox" name="acudidos" value="{{ e.id }}" {% if e.id in acudidos %}checked{% endif %}>
+          {{ e.nombre }} <span class="tenue">({{ e.grado or 'sin grado' }})</span></label>
+      {% else %}
+        <span class="tenue">Aún no hay estudiantes registrados.</span>
+      {% endfor %}
+    </div>
+  </fieldset>
+
+  <label class="casilla"><input type="checkbox" name="activo" {% if not u or u.activo %}checked{% endif %}
+    {% if u and u.id == g.usuario.id %}disabled{% endif %}> Cuenta activa (puede iniciar sesión)</label>
+
+  <div class="acciones">
+    <button class="btn btn-primario">Guardar</button>
+    <a class="btn" href="{{ url_for('admin.usuarios') }}">Cancelar</a>
+  </div>
+</form>
+<script>
+  const rol = document.getElementById('rol');
+  function mostrar() {
+    document.querySelectorAll('[data-rol]').forEach(el => el.hidden = el.dataset.rol !== rol.value);
+  }
+  rol.addEventListener('change', mostrar);
+  mostrar();
+</script>
+{% endblock %}

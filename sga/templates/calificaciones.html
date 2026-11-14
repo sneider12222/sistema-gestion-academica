@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block titulo %}Calificaciones · {{ a.asignatura }} {{ a.grado }}{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <p class="sobretitulo">Registro de calificaciones · {{ a.docente }}</p>
+    <h1>{{ a.asignatura }} <span class="grado">{{ a.grado }}</span></h1>
+  </div>
+  <div class="acciones">
+    <form class="filtros">
+      <select name="periodo" onchange="this.form.submit()">
+        {% for p in periodos %}<option value="{{ p.id }}" {% if p.id == periodo.id %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}
+      </select>
+    </form>
+    <a class="btn" href="{{ url_for('docente.asistencia', aid=a.id) }}">Ir a asistencia</a>
+  </div>
+</div>
+
+<section class="tarjeta">
+  <h2>Nueva actividad evaluativa</h2>
+  <form method="post" class="filtros">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="accion" value="crear_actividad">
+    <input type="hidden" name="periodo" value="{{ periodo.id }}">
+    <input name="nombre" placeholder="Nombre (taller, examen…)" required>
+    <input type="number" name="porcentaje" min="1" max="100" step="1" placeholder="% del periodo" required>
+    <input type="date" name="fecha" value="{{ hoy }}" required>
+    <button class="btn">Agregar actividad</button>
+  </form>
+  {% if actividades and suma_pct != 100 %}
+    <p class="flash flash-aviso">Los porcentajes suman {{ suma_pct|round|int }}%. La definitiva se calcula en proporción a las actividades calificadas; lo ideal es que sumen 100%.</p>
+  {% endif %}
+</section>
+
+{% if not actividades %}
+  <p class="tarjeta tenue">Aún no hay actividades en {{ periodo.nombre }}. Cree la primera para registrar notas.</p>
+{% elif not estudiantes %}
+  <p class="tarjeta tenue">Este grado no tiene estudiantes activos.</p>
+{% else %}
+<form method="post" id="notas">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="accion" value="guardar_notas">
+  <input type="hidden" name="periodo" value="{{ periodo.id }}">
+</form>
+<div class="tarjeta sin-relleno desplazable">
+<table class="planilla">
+  <thead>
+    <tr>
+      <th class="num">N.º</th><th>Estudiante</th>
+      {% for act in actividades %}
+      <th class="centro">
+        {{ act.nombre }}<br><span class="tenue pequeno">{{ act.porcentaje|round|int }}% · {{ act.fecha }}</span><br>
+        <form method="post" class="en-linea" onsubmit="return confirm('¿Eliminar la actividad y todas sus notas?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="accion" value="eliminar_actividad">
+          <input type="hidden" name="periodo" value="{{ periodo.id }}">
+          <input type="hidden" name="actividad_id" value="{{ act.id }}">
+          <button class="enlace peligro pequeno">Eliminar</button>
+        </form>
+      </th>
+      {% endfor %}
+      <th class="centro">Definitiva</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for e in estudiantes %}
+    <tr>
+      <td class="num">{{ loop.index }}</td><td>{{ e.nombre }}</td>
+      {% for act in actividades %}
+        {% set n = notas.get((act.id, e.id)) %}
+        <td class="centro"><input form="notas" class="nota" name="nota_{{ act.id }}_{{ e.id }}" inputmode="decimal"
+            value="{{ '' if n is none else '%.1f'|format(n) }}" aria-label="{{ act.nombre }} de {{ e.nombre }}"></td>
+      {% endfor %}
+      {% set d = definitivas[e.id] %}
+      <td class="centro"><b class="definitiva">{{ d|nota }}</b></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<div class="acciones">
+  <button form="notas" class="btn btn-primario">Guardar notas</button>
+  <span class="tenue pequeno">Notas de 1.0 a 5.0 · deje la casilla vacía si aún no hay nota.</span>
+</div>
+{% endif %}
+{% endblock %}

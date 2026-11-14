@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block titulo %}Asistencia · {{ a.asignatura }} {{ a.grado }}{% endblock %}
+{% block contenido %}
+<header class="encabezado">
+  <div>
+    <p class="sobretitulo">Registro de asistencia · {{ a.docente }}</p>
+    <h1>{{ a.asignatura }} <span class="grado">{{ a.grado }}</span></h1>
+  </div>
+  <div class="acciones">
+    <form class="filtros">
+      <label class="en-linea">Fecha <input type="date" name="fecha" value="{{ fecha }}" max="{{ hoy }}" onchange="this.form.submit()"></label>
+    </form>
+    <a class="btn" href="{{ url_for('docente.calificaciones', aid=a.id) }}">Ir a calificaciones</a>
+  </div>
+</header>
+
+<div class="rejilla principal-lateral">
+  <div>
+    {% if not estudiantes %}
+      <p class="tarjeta tenue">Este grado no tiene estudiantes activos.</p>
+    {% else %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="fecha" value="{{ fecha }}">
+      {% if not registro %}
+        <p class="flash flash-aviso">Aún no se ha registrado la asistencia del {{ fecha }}. Todos aparecen como presentes; marque las ausencias y guarde.</p>
+      {% endif %}
+      <div class="tarjeta sin-relleno">
+      <table class="planilla">
+        <thead><tr><th class="num">N.º</th><th>Estudiante</th><th class="der">Asistencia del {{ fecha }}</th></tr></thead>
+        <tbody>
+        {% for e in estudiantes %}
+          {% set r = registro.get(e.id) %}
+          {% set actual = r.estado if r else 'P' %}
+          <tr>
+            <td class="num">{{ loop.index }}</td>
+            <td>{{ e.nombre }}</td>
+            <td class="der">
+              <span class="conmutador">
+              {% for clave, nombre in ESTADOS.items() %}
+                <label class="estado-{{ clave }}"><input type="radio" name="estado_{{ e.id }}" value="{{ clave }}" {% if clave == actual %}checked{% endif %}><span>{{ nombre }}</span></label>
+              {% endfor %}
+              </span>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      <div class="acciones"><button class="btn btn-primario">Guardar asistencia</button></div>
+    </form>
+    {% endif %}
+  </div>
+
+  <aside class="tarjeta sin-relleno">
+    <h2 class="con-relleno">Fechas registradas</h2>
+    <table>
+      <thead><tr><th>Fecha</th><th class="der">Presentes</th><th class="der">Ausentes</th></tr></thead>
+      <tbody>
+      {% for h in historial %}
+        <tr><td class="nowrap"><a href="{{ url_for('docente.asistencia', aid=a.id, fecha=h.fecha) }}">{{ h.fecha }}</a></td>
+          <td class="der">{{ h.p }}</td><td class="der">{{ h.a }}</td></tr>
+      {% else %}
+        <tr><td colspan="3" class="tenue">Sin registros.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </aside>
+</div>
+{% endblock %}

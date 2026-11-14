@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Inicio{% endblock %} · Gestión Académica</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body class="{{ 'con-lateral' if g.usuario else 'sin-lateral' }}">
+{% set rol = g.usuario.rol if g.usuario else none %}
+{% macro enlace(ruta, texto) %}
+  <a href="{{ url_for(ruta, **kwargs) }}" {% if request.endpoint == ruta %}class="activo" aria-current="page"{% endif %}>{{ texto }}</a>
+{% endmacro %}
+{% if g.usuario %}
+<aside class="lateral no-imprimir">
+  <div class="franja"></div>
+  <a class="marca" href="{{ url_for('auth.inicio') }}">
+    <span class="emblema"><span>IM</span></span>
+    <span class="marca-texto">Instituto para el Desarrollo de las <b>Inteligencias Múltiples</b></span>
+  </a>
+  <nav>
+    <span class="nav-titulo">Consulta</span>
+    {% if rol == 'estudiante' %}
+      {{ enlace('consulta.informe', 'Mi informe académico', estudiante_id=g.usuario.id) }}
+    {% else %}
+      {{ enlace('auth.inicio', 'Panel de consulta') }}
+    {% endif %}
+    {% if rol in ('administrador', 'docente', 'acudiente') %}
+      {{ enlace('consulta.estudiantes', 'Mis acudidos' if rol == 'acudiente' else 'Estudiantes') }}
+    {% endif %}
+    {% if rol in ('administrador', 'docente') %}
+      {{ enlace('consulta.reportes', 'Reportes') }}
+      {{ enlace('consulta.bandeja', 'Informes enviados') }}
+    {% endif %}
+    {% if rol == 'acudiente' %}
+      {{ enlace('consulta.bandeja', 'Informes recibidos') }}
+    {% endif %}
+    {% if rol in ('administrador', 'docente') %}
+      <span class="nav-titulo">Registro</span>
+      {{ enlace('docente.anotaciones', 'Anotaciones') }}
+    {% endif %}
+    {% if rol == 'administrador' %}
+      <span class="nav-titulo">Administración</span>
+      {{ enlace('admin.usuarios', 'Usuarios') }}
+      {{ enlace('admin.academico', 'Gestión académica') }}
+      {{ enlace('admin.respaldos', 'Copias de seguridad') }}
+    {% endif %}
+  </nav>
+  <div class="sesion">
+    <a href="{{ url_for('auth.perfil') }}" title="Mi cuenta">
+      <span class="rol rol-{{ rol }}">{{ rol|capitalize }}</span>
+      {{ g.usuario.nombre }}
+    </a>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="salir">Cerrar sesión</button>
+    </form>
+  </div>
+</aside>
+{% endif %}
+
+<main>
+  <div class="membrete solo-imprimir">
+    <b>{{ INSTITUCION }}</b><br>{{ DIRECCION }}
+  </div>
+  {% if datos_prueba and g.usuario %}
+    <p class="aviso-prueba no-imprimir"><b>Datos de prueba.</b> Los nombres, notas y registros son simulados; no corresponden a información real.</p>
+  {% endif %}
+  {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+    <p class="flash flash-{{ categoria }} no-imprimir">{{ mensaje }}</p>
+  {% endfor %}
+  {% block contenido %}{% endblock %}
+</main>
+</body>
+</html>

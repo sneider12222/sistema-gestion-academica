@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block titulo %}Panel de consulta{% endblock %}
+{% block contenido %}
+<header class="encabezado">
+  <div>
+    <p class="sobretitulo">Panel de consulta · {{ g.usuario.rol|capitalize }}</p>
+    <h1>{{ g.usuario.nombre }}</h1>
+  </div>
+</header>
+
+{% if g.usuario.rol == 'administrador' %}
+  <section class="tarjeta indicador">
+    <div>
+      <p class="sobretitulo">Indicador del proyecto</p>
+      <h2>Usuarios con acceso al sistema de gestión académica</h2>
+      <p class="tenue">Meta: {{ meta }} usuarios potenciales. Fuente de verificación: registros de usuarios del sistema.</p>
+    </div>
+    <div class="indicador-valor">
+      <b>{{ total }}</b><span>de {{ meta }}</span>
+      <div class="barra-meta" role="img" aria-label="{{ total }} de {{ meta }} usuarios"><i style="width: {{ [100, (100 * total / meta)|round|int]|min }}%"></i></div>
+    </div>
+  </section>
+
+  <h2 class="titulo-seccion">Usuarios activos por perfil</h2>
+  <div class="rejilla cuatro">
+    {% for r, nombre in [('docente', 'Docentes'), ('estudiante', 'Estudiantes'), ('acudiente', 'Padres / acudientes'), ('administrador', 'Administradores')] %}
+    <a class="tarjeta cifra borde-{{ r }}" href="{{ url_for('admin.usuarios', rol=r) }}"><b>{{ por_rol.get(r, 0) }}</b><span>{{ nombre }}</span></a>
+    {% endfor %}
+  </div>
+
+  <h2 class="titulo-seccion">Información institucional</h2>
+  <div class="rejilla tres">
+    <a class="tarjeta acceso" href="{{ url_for('consulta.reportes') }}"><h3>Reportes</h3><p>Calificaciones y asistencia de cada grado por periodo.</p></a>
+    <a class="tarjeta acceso" href="{{ url_for('consulta.estudiantes') }}"><h3>Informes académicos</h3><p>Consulta y envío del informe de cada estudiante.</p></a>
+    <a class="tarjeta acceso" href="{{ url_for('consulta.bandeja') }}"><h3>Informes enviados</h3><p>{{ enviados }} informe(s) entregados a acudientes.</p></a>
+  </div>
+
+{% elif g.usuario.rol == 'docente' %}
+  <h2 class="titulo-seccion">Mis asignaturas</h2>
+  {% if asignaciones %}
+  <div class="rejilla tres">
+    {% for a in asignaciones %}
+    <div class="tarjeta materia">
+      <span class="grado">{{ a.grado }}</span>
+      <h3>{{ a.asignatura }}</h3>
+      <p class="tenue">{{ a.estudiantes }} estudiantes</p>
+      <div class="acciones">
+        <a class="btn btn-primario" href="{{ url_for('docente.calificaciones', aid=a.id) }}">Calificaciones</a>
+        <a class="btn" href="{{ url_for('docente.asistencia', aid=a.id) }}">Asistencia</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p class="tarjeta tenue">Aún no tiene asignaturas a cargo. El administrador las asigna desde Gestión académica.</p>
+  {% endif %}
+
+{% elif g.usuario.rol == 'acudiente' %}
+  {% if sin_leer %}
+    <p class="flash flash-ok">Tiene {{ sin_leer }} informe(s) sin leer. <a href="{{ url_for('consulta.bandeja') }}">Ver informes recibidos</a></p>
+  {% endif %}
+  <h2 class="titulo-seccion">Mis acudidos</h2>
+  {% if acudidos %}
+  <div class="rejilla tres">
+    {% for e in acudidos %}
+    <div class="tarjeta materia">
+      <span class="grado">{{ e.grado or '—' }}</span>
+      <h3>{{ e.nombre }}</h3>
+      <p class="tenue">Rendimiento académico y asistencia</p>
+      <a class="btn btn-primario" href="{{ url_for('consulta.informe', estudiante_id=e.id) }}">Ver notas y asistencia</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p class="tarjeta tenue">Su cuenta aún no tiene estudiantes vinculados. Comuníquese con la institución.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

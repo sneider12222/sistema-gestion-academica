@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titulo %}Estudiantes{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div><p class="sobretitulo">Consulta</p><h1>Estudiantes</h1></div>
+  <input type="search" id="filtro" placeholder="Filtrar por nombre o grado">
+</div>
+<div class="tarjeta sin-relleno">
+<table id="lista">
+  <thead><tr><th>Estudiante</th><th>Documento</th><th>Grado</th><th></th></tr></thead>
+  <tbody>
+  {% for e in estudiantes %}
+    <tr><td>{{ e.nombre }}</td><td>{{ e.documento or '—' }}</td><td>{{ e.grado or '—' }}</td>
+      <td class="der"><a href="{{ url_for('consulta.informe', estudiante_id=e.id) }}">Ver informe</a></td></tr>
+  {% else %}
+    <tr><td colspan="4" class="tenue">No hay estudiantes para consultar.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<script>
+  document.getElementById('filtro').addEventListener('input', ev => {
+    const t = ev.target.value.toLowerCase();
+    document.querySelectorAll('#lista tbody tr').forEach(f => f.hidden = !f.textContent.toLowerCase().includes(t));
+  });
+</script>
+{% endblock %}

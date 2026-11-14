@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block titulo %}Gestión académica{% endblock %}
+{% block contenido %}
+{% macro borrar(tabla, id) %}
+  <form method="post" class="en-linea" onsubmit="return confirm('¿Eliminar este registro?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="accion" value="eliminar">
+    <input type="hidden" name="tabla" value="{{ tabla }}">
+    <input type="hidden" name="id" value="{{ id }}">
+    <button class="enlace peligro">Eliminar</button>
+  </form>
+{% endmacro %}
+<p class="sobretitulo">Administración</p>
+<h1>Gestión académica</h1>
+
+<section class="tarjeta">
+  <h2>Asignación de docentes</h2>
+  <p class="tenue">Qué docente dicta cada asignatura en cada grado. Guardar una combinación existente cambia el docente.</p>
+  <form method="post" class="filtros">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="accion" value="asignacion">
+    <select name="grado_id" required><option value="">Grado</option>{% for x in grados %}<option value="{{ x.id }}">{{ x.nombre }}</option>{% endfor %}</select>
+    <select name="asignatura_id" required><option value="">Asignatura</option>{% for x in asignaturas %}<option value="{{ x.id }}">{{ x.nombre }}</option>{% endfor %}</select>
+    <select name="docente_id" required><option value="">Docente</option>{% for x in docentes %}<option value="{{ x.id }}">{{ x.nombre }}</option>{% endfor %}</select>
+    <button class="btn btn-primario">Asignar</button>
+  </form>
+  <table>
+    <thead><tr><th>Grado</th><th>Asignatura</th><th>Docente</th><th></th></tr></thead>
+    <tbody>
+    {% for a in asignaciones %}
+      <tr><td>{{ a.grado }}</td><td>{{ a.asignatura }}</td><td>{{ a.docente }}</td>
+        <td class="der">
+          <a href="{{ url_for('docente.calificaciones', aid=a.id) }}">Calificaciones</a> ·
+          <a href="{{ url_for('docente.asistencia', aid=a.id) }}">Asistencia</a> ·
+          {{ borrar('asignaciones', a.id) }}
+        </td></tr>
+    {% else %}
+      <tr><td colspan="4" class="tenue">Sin asignaciones.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<div class="rejilla tres">
+  <section class="tarjeta">
+    <h2>Grados</h2>
+    <form method="post" class="filtros">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="accion" value="grado">
+      <input name="nombre" placeholder="Ej. 8°A" required>
+      <button class="btn">Agregar</button>
+    </form>
+    <table><tbody>
+      {% for x in grados %}<tr><td>{{ x.nombre }} <span class="tenue">· {{ x.estudiantes }} est.</span></td><td class="der">{{ borrar('grados', x.id) }}</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Asignaturas</h2>
+    <form method="post" class="filtros">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="accion" value="asignatura">
+      <input name="nombre" placeholder="Ej. Sociales" required>
+      <button class="btn">Agregar</button>
+    </form>
+    <table><tbody>
+      {% for x in asignaturas %}<tr><td>{{ x.nombre }}</td><td class="der">{{ borrar('asignaturas', x.id) }}</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Periodos</h2>
+    <form method="post" class="apilado">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="accion" value="periodo">
+      <input name="nombre" placeholder="Ej. Periodo 1 - 2027" required>
+      <label>Inicio <input type="date" name="fecha_inicio" required></label>
+      <label>Fin <input type="date" name="fecha_fin" required></label>
+      <button class="btn">Agregar</button>
+    </form>
+    <table><tbody>
+      {% for x in periodos %}<tr><td>{{ x.nombre }}<br><span class="tenue pequeno">{{ x.fecha_inicio }} a {{ x.fecha_fin }}</span></td><td class="der">{{ borrar('periodos', x.id) }}</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titulo %}Respaldos{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div><p class="sobretitulo">Administración</p><h1>Copias de seguridad</h1></div>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-primario">Crear copia de seguridad</button>
+  </form>
+</div>
+<p class="tenue">Las copias se guardan en <code>{{ carpeta }}</code>. Para restaurar una, detenga el sistema y reemplace <code>sga.db</code> por la copia.</p>
+<div class="tarjeta sin-relleno">
+<table>
+  <thead><tr><th>Archivo</th><th>Fecha</th><th class="der">Tamaño</th></tr></thead>
+  <tbody>
+  {% for a in archivos %}
+    <tr><td>{{ a.nombre }}</td><td>{{ a.fecha }}</td><td class="der">{{ a.kb }} KB</td></tr>
+  {% else %}
+    <tr><td colspan="3" class="tenue">Aún no se han creado respaldos.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

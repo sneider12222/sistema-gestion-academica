@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}Usuarios{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div><p class="sobretitulo">Administración</p><h1>Usuarios</h1></div>
+  <a class="btn btn-primario" href="{{ url_for('admin.usuario_form') }}">Crear usuario</a>
+</div>
+<form class="filtros">
+  <select name="rol" onchange="this.form.submit()">
+    <option value="">Todos los roles</option>
+    {% for r in roles %}<option value="{{ r }}" {% if r == rol %}selected{% endif %}>{{ r|capitalize }}</option>{% endfor %}
+  </select>
+  <input type="search" name="q" value="{{ buscar }}" placeholder="Buscar por nombre, usuario o documento">
+  <button class="btn">Buscar</button>
+</form>
+<div class="tarjeta sin-relleno">
+<table>
+  <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Documento</th><th>Grado</th><th>Estado</th><th></th></tr></thead>
+  <tbody>
+  {% for u in usuarios %}
+    <tr>
+      <td>{{ u.nombre }}</td><td>{{ u.usuario }}</td><td>{{ u.rol|capitalize }}</td>
+      <td>{{ u.documento or '—' }}</td><td>{{ u.grado or '—' }}</td>
+      <td><span class="etiqueta {{ 'ok' if u.activo else 'mal' }}">{{ 'Activo' if u.activo else 'Inactivo' }}</span></td>
+      <td class="der"><a href="{{ url_for('admin.usuario_form', uid=u.id) }}">Editar</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="tenue">No hay usuarios con ese criterio.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="tenue pequeno">{{ usuarios|length }} usuario(s).</p>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}Aviso{% endblock %}
+{% block contenido %}
+<div class="tarjeta aviso-grande">
+  <span class="codigo">{{ codigo }}</span>
+  <p>{{ mensaje }}</p>
+  <a class="btn btn-primario" href="{{ url_for('auth.inicio') }}">Volver al inicio</a>
+</div>
+{% endblock %}

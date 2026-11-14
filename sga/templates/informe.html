@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block titulo %}Informe · {{ inf.estudiante.nombre }}{% endblock %}
+{% block contenido %}
+{% set est = inf.estudiante %}
+<header class="encabezado">
+  <div>
+    <p class="sobretitulo">Informe académico · {{ inf.periodo.nombre }} ({{ inf.periodo.fecha_inicio }} a {{ inf.periodo.fecha_fin }})</p>
+    <h1>{{ est.nombre }} <span class="grado">{{ est.grado or 'Sin grado' }}</span></h1>
+    <p class="tenue">Documento {{ est.documento or '—' }}</p>
+  </div>
+  <div class="acciones no-imprimir">
+    <form class="filtros">
+      <select name="periodo" onchange="this.form.submit()" aria-label="Periodo">
+        {% for p in periodos %}<option value="{{ p.id }}" {% if p.id == inf.periodo.id %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}
+      </select>
+    </form>
+    <button class="btn" onclick="window.print()">Imprimir informe</button>
+  </div>
+</header>
+
+<div class="resumen">
+  <div><span class="sello">{{ inf.promedio|nota }}</span><p><b>Promedio del periodo</b><br><span class="tenue">Sobre las asignaturas con notas</span></p></div>
+  <div><span class="sello turquesa">{{ inf.pct_asistencia ~ '%' if inf.pct_asistencia is not none else '—' }}</span><p><b>Asistencia</b><br><span class="tenue">{{ inf.asistencia.P }} de {{ inf.clases }} clases registradas</span></p></div>
+  <div><span class="sello mostaza">{{ inf.asistencia.A }}</span><p><b>Ausencias</b><br><span class="tenue">En el periodo</span></p></div>
+  <div><span class="sello morado">{{ inf.anotaciones|length }}</span><p><b>Anotaciones</b><br><span class="tenue">Realizadas por docentes</span></p></div>
+</div>
+
+<section class="tarjeta sin-relleno">
+  <h2 class="con-relleno">Calificaciones del periodo</h2>
+  <table class="planilla">
+    <thead><tr><th>Asignatura</th><th>Actividades evaluadas</th><th class="centro">Ausencias</th><th class="centro">Definitiva</th></tr></thead>
+    <tbody>
+    {% for m in inf.materias %}
+      <tr>
+        <td><b>{{ m.asignatura }}</b><br><span class="tenue pequeno">{{ m.docente }}</span></td>
+        <td>
+          {% for act in m.actividades %}
+            <span class="pastilla" title="{{ act.fecha }}">{{ act.actividad }} · {{ act.porcentaje|round|int }}% <b>{{ act.nota|nota }}</b></span>
+          {% else %}
+            <span class="tenue">Sin actividades en este periodo</span>
+          {% endfor %}
+        </td>
+        <td class="centro">{{ m.asistencia.A }}</td>
+        <td class="centro"><b class="definitiva">{{ m.definitiva|nota }}</b></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="4" class="tenue">El grado del estudiante aún no tiene asignaturas asignadas.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="tenue pequeno con-relleno">La definitiva es el promedio ponderado de las actividades ya calificadas.</p>
+</section>
+
+<section class="tarjeta sin-relleno">
+  <h2 class="con-relleno">Historial académico</h2>
+  <table class="planilla">
+    <thead><tr><th>Asignatura</th>{% for p in periodos %}<th class="centro {{ 'col-actual' if p.id == inf.periodo.id else '' }}">{{ p.nombre }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for h in inf.historial %}
+      <tr><td>{{ h.asignatura }}</td>
+        {% for p in periodos %}<td class="centro {{ 'col-actual' if p.id == inf.periodo.id else '' }}">{{ h.notas.get(p.id)|nota }}</td>{% endfor %}</tr>
+    {% else %}
+      <tr><td colspan="{{ periodos|length + 1 }}" class="tenue">Sin historial todavía.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<div class="rejilla dos">
+  <section class="tarjeta sin-relleno">
+    <h2 class="con-relleno">Ausencias registradas</h2>
+    <table>
+      <thead><tr><th>Fecha</th><th>Asignatura</th></tr></thead>
+      <tbody>
+      {% for x in inf.ausencias %}
+        <tr><td class="nowrap">{{ x.fecha }}</td><td>{{ x.asignatura }}</td></tr>
+      {% else %}
+        <tr><td colspan="2" class="tenue">Sin ausencias en el periodo.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Anotaciones de docentes</h2>
+    {% for n in inf.anotaciones %}
+      <div class="anotacion">
+        <header><span class="tenue pequeno">{{ n.fecha }} · {{ n.autor }}</span></header>
+        <p>{{ n.descripcion }}</p>
+      </div>
+    {% else %}
+      <p class="tenue">Sin anotaciones en el periodo.</p>
+    {% endfor %}
+  </section>
+</div>
+
+{% if puede_enviar %}
+<section class="tarjeta envio no-imprimir">
+  <h2>Enviar este informe a los acudientes</h2>
+  {% if acudientes %}
+    <p class="tenue">Lo recibirá{{ 'n' if acudientes|length > 1 }}: {% for ac in acudientes %}<b>{{ ac.nombre }}</b>{{ ', ' if not loop.last }}{% endfor %}, en su sección de informes recibidos.</p>
+    <form method="post" action="{{ url_for('consulta.enviar', estudiante_id=est.id) }}" class="formulario">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="periodo" value="{{ inf.periodo.id }}">
+      <label>Mensaje para el acudiente (opcional)
+        <textarea name="mensaje" rows="3" maxlength="1000"></textarea>
+      </label>
+      <button class="btn btn-primario">Enviar informe</button>
+    </form>
+  {% else %}
+    <p class="tenue">Este estudiante no tiene acudientes vinculados; el administrador puede vincularlos desde Usuarios.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
