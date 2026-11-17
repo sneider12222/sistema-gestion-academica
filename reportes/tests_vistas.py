@@ -95,6 +95,17 @@ class Acceso(Base):
                          "/anotaciones/", f"/informe/{est1}/enviar/", "/administracion/academico/"):
                 self.assertEqual(self.client.post(ruta, {}).status_code, 403, f"{usuario} POST {ruta}")
 
+    def test_pagina_404_propia_sin_detalles_tecnicos(self):
+        self.entrar("docente1")
+        r = self.client.get("/no-existe/")
+        self.assertEqual(r.status_code, 404)
+        self.assertContains(r, "La página solicitada no existe.", status_code=404)
+        self.assertNotContains(r, "URLconf", status_code=404)
+
+    def test_estilos_disponibles_sin_debug(self):
+        r = self.client.get("/static/estilos.css")
+        self.assertEqual(r.status_code, 200)
+
     def test_aviso_de_datos_de_prueba(self):
         self.entrar("admin", CLAVE_ADMIN)
         self.assertContains(self.client.get("/"), "Datos de prueba.")

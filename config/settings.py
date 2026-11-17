@@ -29,10 +29,10 @@ def _clave_local():
 
 SECRET_KEY = env("SECRET_KEY", default=None) or _clave_local()
 
-# El sistema se usa en entorno local (localhost), como fija el modelo técnico.
-# DEBUG queda activo por defecto para que runserver sirva los archivos
-# estáticos; se puede desactivar con DEBUG=False.
-DEBUG = env.bool("DEBUG", default=True)
+# DEBUG queda desactivado por defecto: con DEBUG=True Django muestra páginas
+# técnicas de error que revelan rutas y configuración. Para desarrollar se
+# activa con DEBUG=True en el entorno o en .env.
+DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
 
 # ADR 0002: el motor es configuración, no código. SQLite por defecto; para un
