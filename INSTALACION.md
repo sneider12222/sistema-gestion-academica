@@ -43,7 +43,7 @@ el archivo en una carpeta, por ejemplo en `Documentos`.
 
 ## 4. Instalar las dependencias
 
-Abra PowerShell **dentro de la carpeta del proyecto** (la que contiene `app.py`). En el Explorador de
+Abra PowerShell **dentro de la carpeta del proyecto** (la que contiene `manage.py`). En el Explorador de
 archivos puede hacerlo con clic derecho sobre la carpeta → *Abrir en Terminal*. Luego ejecute:
 
 ```bash
@@ -52,67 +52,82 @@ py -m pip install -r requirements.txt
 
 Este paso se hace una sola vez por computador.
 
-## 5. Iniciar el sistema
+## 5. Crear la base de datos
 
 ```bash
-py app.py
+py manage.py migrate
+```
+
+Esto crea el archivo `db.sqlite3` con todas las tablas. Para probar el sistema con **datos de prueba**
+(ficticios), cárguelos con:
+
+```bash
+py manage.py seed
+```
+
+Los usuarios y contraseñas de prueba de cada rol están en el archivo [README.md](README.md).
+
+## 6. Iniciar el sistema
+
+```bash
+py manage.py runserver
 ```
 
 Deje esa ventana abierta mientras usa el sistema y entre desde el navegador a:
 
-<http://127.0.0.1:5000>
-
-La primera vez que se inicia, el sistema crea solo la base de datos con **datos de prueba** (ficticios).
-Los usuarios y contraseñas de prueba de cada rol están en el archivo [README.md](README.md).
+<http://127.0.0.1:8000>
 
 Para detener el sistema, vuelva a la ventana de PowerShell y pulse `Ctrl + C`.
 
-## 6. Preparar el sistema para datos reales
+## 7. Preparar el sistema para datos reales
 
 Los datos de prueba no deben mezclarse con información real. Para empezar con el sistema limpio:
 
-```bash
-py app.py --vacio
-```
+1. Detenga el sistema y borre el archivo `db.sqlite3` (si ya lo había creado con datos de prueba).
+2. Cree la base vacía con `py manage.py migrate`.
+3. Cree la cuenta del administrador con `py manage.py createsuperuser`. Le pedirá usuario, nombre,
+   rol (escriba `administrador`) y contraseña.
+4. Inicie el sistema con `py manage.py runserver` e ingrese con esa cuenta.
+5. En **Gestión académica** cree los grados, asignaturas y periodos.
+6. En **Usuarios** registre docentes, estudiantes y acudientes.
+7. En **Gestión académica** asigne cada docente a su asignatura y grado.
 
-Esto borra la base de datos y deja únicamente la cuenta `admin` (su contraseña inicial está en el
-README). Después:
+## 8. Pasar los datos de un computador a otro
 
-1. Inicie el sistema con `py app.py` e ingrese como `admin`.
-2. Cambie la contraseña desde **Mi cuenta** (clic en su nombre, abajo a la izquierda).
-3. En **Gestión académica** cree los grados, asignaturas y periodos.
-4. En **Usuarios** registre docentes, estudiantes y acudientes.
-5. En **Gestión académica** asigne cada docente a su asignatura y grado.
-
-## 7. Pasar los datos de un computador a otro
-
-Toda la información está en un solo archivo: `instance/sga.db`.
+Toda la información está en un solo archivo: `db.sqlite3`, en la carpeta del proyecto.
 
 1. En el computador de origen, ingrese como administrador y cree una copia en **Copias de seguridad**
-   (queda en `instance/respaldos/`), o detenga el sistema y copie `instance/sga.db` directamente.
+   (queda en la carpeta `respaldos/`), o detenga el sistema y copie `db.sqlite3` directamente.
 2. En el computador nuevo, instale el sistema con los pasos 1 a 4.
-3. Cree la carpeta `instance` dentro del proyecto si no existe, y pegue allí el archivo con el nombre
-   `sga.db`.
-4. Inicie el sistema con `py app.py`.
+3. Pegue el archivo en la carpeta del proyecto con el nombre `db.sqlite3`.
+4. Ejecute `py manage.py migrate` (no borra datos; solo aplica cambios de estructura pendientes) e
+   inicie el sistema con `py manage.py runserver`.
 
-La carpeta `instance` no se sube a GitHub porque contiene datos personales de estudiantes.
+`db.sqlite3` y `respaldos/` no se suben a GitHub porque contienen datos personales de estudiantes.
 
-## 8. Comandos disponibles
+## 9. Comandos disponibles
 
 | Comando | Qué hace |
 |---|---|
-| `py app.py` | Inicia el sistema |
-| `py app.py --reiniciar` | Borra la base de datos y la recrea con los datos de prueba |
-| `py app.py --vacio` | Borra la base de datos y deja solo la cuenta `admin` |
-| `py -m unittest discover tests -v` | Ejecuta las pruebas automáticas |
+| `py manage.py runserver` | Inicia el sistema |
+| `py manage.py migrate` | Crea o actualiza las tablas de la base de datos |
+| `py manage.py seed` | Carga los datos de prueba en una base vacía |
+| `py manage.py seed --reemplazar` | Borra **todos** los datos y vuelve a cargar los de prueba |
+| `py manage.py createsuperuser` | Crea una cuenta de administrador |
+| `py manage.py test` | Ejecuta las pruebas automáticas |
 
-## 9. Problemas frecuentes
+La versión Flask anterior se conserva como referencia y todavía se puede iniciar con `py app.py`
+(en <http://127.0.0.1:5000>); usa su propia base en `instance/sga.db`.
+
+## 10. Problemas frecuentes
 
 | Problema | Solución |
 |---|---|
 | `py` no se reconoce como comando | Use `python` en lugar de `py`. Si tampoco funciona, reinstale Python marcando "Add python.exe to PATH". |
-| `No module named 'flask'` | Falta el paso 4. Ejecute `py -m pip install -r requirements.txt` dentro de la carpeta del proyecto. |
-| `can't open file 'app.py'` | PowerShell no está en la carpeta del proyecto. Entre a ella con `cd` y la ruta de la carpeta. |
-| La página no carga | Verifique que la ventana donde ejecutó `py app.py` siga abierta y sin errores. |
-| El puerto 5000 está ocupado | Cierre el otro programa que lo usa, o cierre una ventana anterior del sistema que haya quedado abierta. |
+| `No module named 'django'` | Falta el paso 4. Ejecute `py -m pip install -r requirements.txt` dentro de la carpeta del proyecto. |
+| `can't open file 'manage.py'` | PowerShell no está en la carpeta del proyecto. Entre a ella con `cd` y la ruta de la carpeta. |
+| `no such table` al abrir una página | Falta el paso 5. Ejecute `py manage.py migrate`. |
+| `La base ya tiene usuarios` al ejecutar `seed` | La base ya tiene datos. Para reemplazarlos por los de prueba use `py manage.py seed --reemplazar` (borra todo). |
+| La página no carga | Verifique que la ventana donde ejecutó `py manage.py runserver` siga abierta y sin errores. |
+| El puerto 8000 está ocupado | Cierre la ventana anterior del sistema, o inícielo en otro puerto con `py manage.py runserver 8001`. |
 | Olvidó la contraseña de `admin` | Otro administrador puede cambiarla en **Usuarios**. Si no hay otro, restaure una copia de seguridad. |

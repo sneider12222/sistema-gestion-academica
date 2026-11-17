@@ -1,6 +1,7 @@
 """Tests de la capa de servicios de calificaciones.
 
 Cobertura mínima TDD para funciones puras portadas desde sga/servicios.py.
+Todas las notas usadas están en la escala del sistema (1.0 a 5.0).
 """
 from django.test import TestCase
 
@@ -18,19 +19,19 @@ class TestDefinitiva(TestCase):
 
     def test_definitiva_un_par(self):
         from calificaciones.services import definitiva
-        # 10 * 0.4 = 4.0 / 0.4 = 10.0, pero redondeo a 1 decimal con 1e-9
-        self.assertEqual(definitiva([(10.0, 0.4)]), 10.0)
+        # Con una sola actividad calificada la definitiva es su nota: (4.0*0.4)/0.4 = 4.0
+        self.assertEqual(definitiva([(4.0, 0.4)]), 4.0)
 
     def test_definitiva_dos_pares(self):
         from calificaciones.services import definitiva
-        # (10*0.4 + 8*0.6) / (0.4+0.6) = (4+4.8)/1.0 = 8.8 → round(8.8+1e-9, 1) = 8.8
-        self.assertEqual(definitiva([(10.0, 0.4), (8.0, 0.6)]), 8.8)
+        # (5*0.4 + 3*0.6) / (0.4+0.6) = (2+1.8)/1.0 = 3.8 → round(3.8+1e-9, 1) = 3.8
+        self.assertEqual(definitiva([(5.0, 0.4), (3.0, 0.6)]), 3.8)
 
     def test_definitiva_mixto_con_none(self):
         from calificaciones.services import definitiva
-        # Solo la nota 7 cuenta, la None se ignora en el peso y el numerador
-        # (7*0.5) / 0.5 = 7.0, round(7.0+1e-9, 1) = 7.0
-        self.assertEqual(definitiva([(7.0, 0.5), (None, 0.5)]), 7.0)
+        # Solo la nota 3.5 cuenta, la None se ignora en el peso y el numerador
+        # (3.5*0.5) / 0.5 = 3.5, round(3.5+1e-9, 1) = 3.5
+        self.assertEqual(definitiva([(3.5, 0.5), (None, 0.5)]), 3.5)
 
     def test_definitiva_redondeo_mitad_sube(self):
         from calificaciones.services import definitiva
