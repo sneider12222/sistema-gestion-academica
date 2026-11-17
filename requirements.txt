@@ -1,2 +1,6 @@
+# Sistema principal (Django)
 Django>=5.0,<6.0
 django-environ>=0.11,<0.12
+
+# Versión anterior en Flask (app.py y sga/), conservada como referencia mientras dura la migración
+Flask>=3.0
