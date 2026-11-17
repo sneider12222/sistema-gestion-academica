@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}Ingresar{% endblock %}
+{% block contenido %}
+<div class="portada">
+  <section class="portada-panel">
+    <div class="franja"></div>
+    <div class="portada-texto">
+      <span class="emblema grande"><span>IM</span></span>
+      <p class="sobretitulo">{{ INSTITUCION }}</p>
+      <h1>Calificaciones, asistencia e informes académicos</h1>
+      <p>Un solo lugar para registrar y consultar el desempeño académico y la asistencia de los estudiantes.</p>
+      <ul class="perfiles">
+        <li><b>Docentes</b> registran calificaciones, asistencia y anotaciones.</li>
+        <li><b>Estudiantes</b> consultan su desempeño académico y asistencia.</li>
+        <li><b>Padres y acudientes</b> conocen oportunamente el rendimiento de sus acudidos.</li>
+        <li><b>Administradores</b> consultan información y generan informes institucionales.</li>
+      </ul>
+    </div>
+    <p class="pie">{{ DIRECCION }}</p>
+  </section>
+
+  <section class="portada-form">
+    <form method="post">
+      <h2>Ingreso al sistema</h2>
+      <p class="tenue">Use el usuario y la contraseña que le asignó la institución.</p>
+      {% csrf_token %}
+      <label>Usuario
+        <input name="usuario" autocomplete="username" required autofocus>
+      </label>
+      <label>Contraseña
+        <input type="password" name="clave" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn-primario ancho">Ingresar</button>
+      <p class="tenue pequeno legal">La información académica y los datos personales de los estudiantes se tratan conforme a la Ley 1581 de 2012 (protección de datos personales) y la Ley 1098 de 2006 (Código de la Infancia y la Adolescencia).</p>
+    </form>
+  </section>
+</div>
+{% endblock %}

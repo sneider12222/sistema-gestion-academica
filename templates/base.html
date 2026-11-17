@@ -1,0 +1,69 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Inicio{% endblock %} · Gestión Académica</title>
+  <link rel="stylesheet" href="{% static 'estilos.css' %}">
+</head>
+<body class="{% if user.is_authenticated %}con-lateral{% else %}sin-lateral{% endif %}">
+{% if user.is_authenticated %}
+{% with ruta=request.resolver_match.view_name %}
+<aside class="lateral no-imprimir">
+  <div class="franja"></div>
+  <a class="marca" href="{% url 'accounts:inicio' %}">
+    <span class="emblema"><span>IM</span></span>
+    <span class="marca-texto">Instituto para el Desarrollo de las <b>Inteligencias Múltiples</b></span>
+  </a>
+  <nav>
+    <span class="nav-titulo">Consulta</span>
+    {% if user.es_estudiante %}
+      <a href="{% url 'reportes:informe' user.pk %}" {% if ruta == 'reportes:informe' %}class="activo" aria-current="page"{% endif %}>Mi informe académico</a>
+    {% else %}
+      <a href="{% url 'accounts:inicio' %}" {% if ruta == 'accounts:inicio' %}class="activo" aria-current="page"{% endif %}>Panel de consulta</a>
+      <a href="{% url 'reportes:estudiantes' %}" {% if ruta == 'reportes:estudiantes' %}class="activo" aria-current="page"{% endif %}>{% if user.es_acudiente %}Mis acudidos{% else %}Estudiantes{% endif %}</a>
+    {% endif %}
+    {% if user.es_admin or user.es_docente %}
+      <a href="{% url 'reportes:reportes' %}" {% if ruta == 'reportes:reportes' %}class="activo" aria-current="page"{% endif %}>Reportes</a>
+      <a href="{% url 'reportes:bandeja' %}" {% if ruta == 'reportes:bandeja' %}class="activo" aria-current="page"{% endif %}>Informes enviados</a>
+      <span class="nav-titulo">Registro</span>
+      <a href="{% url 'reportes:anotaciones' %}" {% if ruta == 'reportes:anotaciones' %}class="activo" aria-current="page"{% endif %}>Anotaciones</a>
+    {% endif %}
+    {% if user.es_acudiente %}
+      <a href="{% url 'reportes:bandeja' %}" {% if ruta == 'reportes:bandeja' %}class="activo" aria-current="page"{% endif %}>Informes recibidos</a>
+    {% endif %}
+    {% if user.es_admin %}
+      <span class="nav-titulo">Administración</span>
+      <a href="{% url 'accounts:usuarios' %}" {% if ruta == 'accounts:usuarios' %}class="activo" aria-current="page"{% endif %}>Usuarios</a>
+      <a href="{% url 'academico:academico' %}" {% if ruta == 'academico:academico' %}class="activo" aria-current="page"{% endif %}>Gestión académica</a>
+      <a href="{% url 'academico:respaldos' %}" {% if ruta == 'academico:respaldos' %}class="activo" aria-current="page"{% endif %}>Copias de seguridad</a>
+    {% endif %}
+  </nav>
+  <div class="sesion">
+    <a href="{% url 'accounts:perfil' %}" title="Mi cuenta">
+      <span class="rol rol-{{ user.rol }}">{{ user.get_rol_display }}</span>
+      {{ user.nombre }}
+    </a>
+    <form method="post" action="{% url 'accounts:logout' %}">
+      {% csrf_token %}
+      <button class="salir">Cerrar sesión</button>
+    </form>
+  </div>
+</aside>
+{% endwith %}
+{% endif %}
+
+<main>
+  <div class="membrete solo-imprimir">
+    <b>{{ INSTITUCION }}</b><br>{{ DIRECCION }}
+  </div>
+  {% if datos_prueba %}
+    <p class="aviso-prueba no-imprimir"><b>Datos de prueba.</b> Los nombres, notas y registros son simulados; no corresponden a información real.</p>
+  {% endif %}
+  {% for m in messages %}
+    <p class="flash flash-{{ m.tags }} no-imprimir">{{ m }}</p>
+  {% endfor %}
+  {% block contenido %}{% endblock %}
+</main>
+</body>
+</html>

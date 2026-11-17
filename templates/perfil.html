@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titulo %}Mi cuenta{% endblock %}
+{% block contenido %}
+<header class="encabezado">
+  <div><p class="sobretitulo">{{ user.get_rol_display }}</p><h1>Mi cuenta</h1></div>
+</header>
+<div class="rejilla dos">
+  <section class="tarjeta">
+    <h2>Datos</h2>
+    <dl class="datos">
+      <dt>Nombre</dt><dd>{{ user.nombre }}</dd>
+      <dt>Usuario</dt><dd>{{ user.usuario }}</dd>
+      <dt>Rol</dt><dd>{{ user.get_rol_display }}</dd>
+      <dt>Documento</dt><dd>{{ user.documento|default:"—" }}</dd>
+      <dt>Correo</dt><dd>{{ user.email|default:"—" }}</dd>
+    </dl>
+  </section>
+  <form method="post" class="tarjeta">
+    <h2>Cambiar contraseña</h2>
+    {% csrf_token %}
+    <label>Contraseña actual <input type="password" name="actual" autocomplete="current-password" required></label>
+    <label>Nueva contraseña <input type="password" name="nueva" autocomplete="new-password" minlength="8" required></label>
+    <label>Confirmar nueva contraseña <input type="password" name="confirmar" autocomplete="new-password" minlength="8" required></label>
+    <button class="btn btn-primario">Actualizar</button>
+  </form>
+</div>
+{% endblock %}
