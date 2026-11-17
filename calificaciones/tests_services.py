@@ -1,10 +1,8 @@
 """Tests de la capa de servicios de calificaciones.
 
-Cobertura mínima TDD para funciones puras que se portarán desde sga/servicios.py.
+Cobertura mínima TDD para funciones puras portadas desde sga/servicios.py.
 """
-from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django.utils import timezone
 
 
 class TestDefinitiva(TestCase):
@@ -34,11 +32,25 @@ class TestDefinitiva(TestCase):
         # (7*0.5) / 0.5 = 7.0, round(7.0+1e-9, 1) = 7.0
         self.assertEqual(definitiva([(7.0, 0.5), (None, 0.5)]), 7.0)
 
-    def test_definitiva_redondeo_tres_cuarte(self):
+    def test_definitiva_redondeo_mitad_sube(self):
         from calificaciones.services import definitiva
-        # 4.95 → round(4.95+1e-9, 1) → 5.0 por el epsilon
-        # 4.44 → 4.4; 4.45 → 4.5
+        # (4.0+5.0)/2 = 4.5 exacto. Este test NO prueba el epsilon: da 4.5 con
+        # y sin él. Prueba que dos notas con el mismo peso dan su media simple.
         self.assertEqual(definitiva([(4.0, 0.5), (5.0, 0.5)]), 4.5)
+
+    def test_definitiva_epsilon_medio_punto(self):
+        from calificaciones.services import definitiva
+        # (1.0*25 + 2.4*75) / 100 = 2.05, pero en binario da 2.049999999...:
+        # round() a secas cae a 2.0 y hunde la nota una décima injustamente.
+        # Con el epsilon redondea a 2.1 (mitad hacia arriba, como el legacy).
+        self.assertEqual(definitiva([(1.0, 25), (2.4, 75)]), 2.1)
+
+    def test_definitiva_epsilon_otro_medio_punto(self):
+        from calificaciones.services import definitiva
+        # (1.1+1.2)/2 = 1.15 → 1.1 sin epsilon, 1.2 con epsilon. Es el caso
+        # gemelo del anterior con otra fracción: el epsilon no es un parche
+        # de un solo valor.
+        self.assertEqual(definitiva([(1.1, 50), (1.2, 50)]), 1.2)
 
     def test_definitiva_sin_calificados(self):
         from calificaciones.services import definitiva
