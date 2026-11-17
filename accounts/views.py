@@ -9,6 +9,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from academico.models import Grado
@@ -33,6 +34,11 @@ def entrar(request):
         )
         if usuario is not None:
             login(request, usuario)
+            # Vuelve a la página que pidió antes de iniciar sesión, solo si es de este sitio
+            destino = request.GET.get("next") or request.POST.get("next", "")
+            if url_has_allowed_host_and_scheme(destino, allowed_hosts={request.get_host()},
+                                               require_https=request.is_secure()):
+                return redirect(destino)
             return redirect("accounts:inicio")
         messages.error(request, "Usuario o contraseña incorrectos.")
     return render(request, "login.html")

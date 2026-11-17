@@ -23,7 +23,10 @@ NOTA_MIN, NOTA_MAX = Decimal("1.0"), Decimal("5.0")
 def _leer_nota(texto):
     """Devuelve la nota redondeada a una décima, o ``None`` si no es válida."""
     try:
-        nota = Decimal(texto.replace(",", ".")).quantize(Decimal("0.1"))
+        nota = Decimal(texto.replace(",", "."))
+        if not nota.is_finite():  # "NaN" o "Infinity" son Decimal válidos pero no notas
+            return None
+        nota = nota.quantize(Decimal("0.1"))
     except InvalidOperation:
         return None
     return nota if NOTA_MIN <= nota <= NOTA_MAX else None
@@ -47,6 +50,8 @@ def calificaciones(request, aid):
             nombre, fecha = f.get("nombre", "").strip(), fecha_o_none(f.get("fecha"))
             try:
                 pct = Decimal(f.get("porcentaje", ""))
+                if not pct.is_finite():
+                    pct = None
             except InvalidOperation:
                 pct = None
             if not nombre or not fecha or pct is None or not 0 < pct <= 100:

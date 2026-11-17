@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 from django.conf import settings
 from django.contrib import messages
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.db.models import Count, ProtectedError
 from django.shortcuts import redirect, render
 
@@ -93,16 +93,21 @@ def _es_sqlite():
 
 
 def crear_respaldo():
-    """Copia en caliente de la base SQLite a la carpeta de respaldos."""
+    """Copia en caliente de la base SQLite a la carpeta de respaldos.
+
+    Usa la conexión activa de Django (la misma base que está usando el sistema)
+    y la API ``backup`` de SQLite, que copia de forma consistente aunque haya
+    escrituras en curso.
+    """
     carpeta = settings.RESPALDOS_DIR
     carpeta.mkdir(parents=True, exist_ok=True)
-    destino = carpeta / f"sga_{datetime.now():%Y%m%d_%H%M%S}.sqlite3"
-    origen = sqlite3.connect(settings.DATABASES["default"]["NAME"])
+    destino = carpeta / f"sga_{datetime.now():%Y%m%d_%H%M%S_%f}.sqlite3"
+    connection.ensure_connection()
     copia = sqlite3.connect(destino)
-    with copia:
-        origen.backup(copia)
-    copia.close()
-    origen.close()
+    try:
+        connection.connection.backup(copia)
+    finally:
+        copia.close()
     return destino
 
 
