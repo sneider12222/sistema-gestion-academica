@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}Anotaciones{% endblock %}
+{% block contenido %}
+<header class="encabezado">
+  <div><p class="sobretitulo">Registro</p><h1>Anotaciones de docentes</h1></div>
+</header>
+<div class="rejilla principal-lateral invertida">
+  <form method="post" class="tarjeta formulario">
+    <h2>Nueva anotación</h2>
+    {% csrf_token %}
+    <label>Estudiante
+      <select name="estudiante_id" required>
+        <option value="">Seleccione…</option>
+        {% for e in estudiantes %}<option value="{{ e.pk }}">{{ e.grado.nombre|default:"Sin grado" }} · {{ e.usuario.nombre }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Fecha <input type="date" name="fecha" value="{{ hoy }}" max="{{ hoy }}" required></label>
+    <label>Anotación <textarea name="descripcion" rows="5" maxlength="1000" required></textarea></label>
+    <button class="btn btn-primario">Registrar</button>
+  </form>
+
+  <div>
+    {% for n in anotaciones %}
+      <article class="tarjeta anotacion">
+        <header>
+          <a href="{% url 'reportes:informe' n.estudiante_id %}"><b>{{ n.estudiante.usuario.nombre }}</b></a>
+          {% if n.estudiante.grado %}<span class="grado">{{ n.estudiante.grado.nombre }}</span>{% endif %}
+          <span class="tenue pequeno">{{ n.fecha|date:"Y-m-d" }} · {{ n.autor.nombre }}</span>
+          <form method="post" class="en-linea" onsubmit="return confirm('¿Eliminar esta anotación?')">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="eliminar">
+            <input type="hidden" name="id" value="{{ n.pk }}">
+            <button class="enlace peligro pequeno">Eliminar</button>
+          </form>
+        </header>
+        <p>{{ n.descripcion }}</p>
+      </article>
+    {% empty %}
+      <p class="tarjeta tenue">Aún no hay anotaciones registradas.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

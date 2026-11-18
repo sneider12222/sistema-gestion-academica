@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titulo %}Informes {% if recibidos %}recibidos{% else %}enviados{% endif %}{% endblock %}
+{% block contenido %}
+<header class="encabezado">
+  <div><p class="sobretitulo">Informes académicos</p><h1>Informes {% if recibidos %}recibidos{% else %}enviados{% endif %}</h1></div>
+</header>
+{% for i in informes %}
+  <article class="tarjeta sobre{% if not i.leido_en %} sin-leer{% endif %}">
+    <div>
+      <h3>{{ i.estudiante.usuario.nombre }} · {{ i.periodo.nombre }}</h3>
+      <p class="tenue pequeno">{{ i.enviado_en|date:"Y-m-d H:i" }} ·
+        {% if recibidos %}Enviado por {{ i.remitente.nombre }}{% else %}Para {{ i.destinatario.nombre }}{% if user.es_admin %} · De {{ i.remitente.nombre }}{% endif %}{% endif %}</p>
+      {% if i.mensaje %}<p class="mensaje">{{ i.mensaje }}</p>{% endif %}
+    </div>
+    <div class="sobre-lado">
+      {% if i.leido_en %}<span class="etiqueta ok">Leído</span>{% else %}<span class="etiqueta aviso">Sin leer</span>{% endif %}
+      {% if recibidos %}
+        <a class="btn btn-primario" href="{% url 'reportes:informe' i.estudiante_id %}?periodo={{ i.periodo_id }}&envio={{ i.pk }}">Abrir informe</a>
+      {% else %}
+        <a class="btn" href="{% url 'reportes:informe' i.estudiante_id %}?periodo={{ i.periodo_id }}">Ver informe</a>
+      {% endif %}
+    </div>
+  </article>
+{% empty %}
+  <p class="tarjeta tenue">{% if recibidos %}Aún no ha recibido informes.{% else %}Aún no se han enviado informes.{% endif %}</p>
+{% endfor %}
+{% endblock %}

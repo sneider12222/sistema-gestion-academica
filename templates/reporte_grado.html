@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load sga %}
+{% block titulo %}Reportes{% endblock %}
+{% block contenido %}
+<header class="encabezado">
+  <div>
+    <p class="sobretitulo">Reporte{% if periodo %} · {{ periodo.nombre }} ({{ periodo.fecha_inicio|date:"Y-m-d" }} a {{ periodo.fecha_fin|date:"Y-m-d" }}){% endif %}</p>
+    <h1>Calificaciones y asistencia {% if grado %}<span class="grado">{{ grado.nombre }}</span>{% endif %}</h1>
+  </div>
+  <div class="acciones no-imprimir">
+    <form class="filtros">
+      <select name="grado" onchange="this.form.submit()" aria-label="Grado">
+        {% for x in grados %}<option value="{{ x.pk }}" {% if x.pk == grado.pk %}selected{% endif %}>{{ x.nombre }}</option>{% endfor %}
+      </select>
+      <select name="periodo" onchange="this.form.submit()" aria-label="Periodo">
+        {% for p in periodos %}<option value="{{ p.pk }}" {% if p.pk == periodo.pk %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}
+      </select>
+    </form>
+    {% if filas %}<button class="btn" onclick="window.print()">Imprimir reporte</button>{% endif %}
+  </div>
+</header>
+
+{% if not grados %}
+  <p class="tarjeta tenue">No tiene grados disponibles para consultar.</p>
+{% elif not filas %}
+  <p class="tarjeta tenue">No hay estudiantes activos o periodos para este reporte.</p>
+{% else %}
+<div class="resumen">
+  <div><span class="sello">{{ filas|length }}</span><p><b>Estudiantes</b><br><span class="tenue">Activos en el grado</span></p></div>
+  <div><span class="sello turquesa">{{ promedio_grado|nota }}</span><p><b>Promedio del grado</b><br><span class="tenue">En el periodo</span></p></div>
+  <div><span class="sello mostaza">{{ ausencias_grado }}</span><p><b>Ausencias</b><br><span class="tenue">Registradas en el periodo</span></p></div>
+</div>
+<div class="tarjeta sin-relleno desplazable">
+<table class="planilla">
+  <thead><tr><th class="num">N.º</th><th>Estudiante</th>{% for s in asignaturas %}<th class="centro">{{ s }}</th>{% endfor %}<th class="centro">Promedio</th><th class="centro">Asistencia</th><th class="no-imprimir"></th></tr></thead>
+  <tbody>
+  {% for inf in filas %}
+    <tr>
+      <td class="num">{{ forloop.counter }}</td>
+      <td>{{ inf.estudiante.usuario.nombre }}</td>
+      {% for m in inf.materias %}<td class="centro">{{ m.definitiva|nota }}</td>{% endfor %}
+      <td class="centro"><b class="definitiva">{{ inf.promedio|nota }}</b></td>
+      <td class="centro">{{ inf.pct_asistencia|porcentaje }}</td>
+      <td class="der no-imprimir"><a href="{% url 'reportes:informe' inf.estudiante.pk %}?periodo={{ periodo.pk }}">Informe</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

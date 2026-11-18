@@ -1,0 +1,7 @@
+<form method="post" class="en-linea" onsubmit="return confirm('¿Eliminar este registro?')">
+  {% csrf_token %}
+  <input type="hidden" name="accion" value="eliminar">
+  <input type="hidden" name="tabla" value="{{ tabla }}">
+  <input type="hidden" name="id" value="{{ id }}">
+  <button class="enlace peligro">Eliminar</button>
+</form>

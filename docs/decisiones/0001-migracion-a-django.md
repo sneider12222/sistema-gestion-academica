@@ -69,8 +69,11 @@ Migrar el sistema a **Django 5.x**, conservando el trabajo previo, con estas con
 ### Sobre el trabajo previo
 
 - **No se descarta nada.** La lógica de negocio se porta; el Flask queda congelado en
-  `legacy/flask`; los datos de estructura se migran como fixtures; notas y asistencia se
-  regeneran con un management command `seed`.
+  `legacy/flask`. **Corrección 2026-11-16:** no existe base SQLite dentro del repositorio
+  (`instance/` está en `.gitignore` y el árbol no trae el archivo), así que no hay datos que
+  migrar. La estructura (grados, asignaturas, periodos, usuarios de prueba) se reconstruye desde
+  `sga/seed.py`, que es determinista (`random.Random(2026)`), y se porta como management command
+  `seed`. Notas y asistencia se regeneran con el mismo comando.
 - `legacy/flask` es también el archivo de estos ADRs: la decisión queda junto al código que
   reemplaza.
 

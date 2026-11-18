@@ -1,8 +1,11 @@
 # Sistema de Gestión de Calificaciones, Asistencia e Informes Académicos
 
 Aplicativo web para el **Instituto para el Desarrollo de las Inteligencias Múltiples** (Riohacha, La Guajira),
-construido según el modelo técnico del proyecto. Hecho en **Python (Flask) + SQLite**; se ejecuta en entorno
-local (localhost), como lo define el documento.
+construido según el modelo técnico del proyecto. Hecho en **Python con Django y SQLite**; se ejecuta en
+entorno local (localhost), como lo define el documento.
+
+La primera versión se construyó en Flask (`app.py` y `sga/`). Se conserva como referencia mientras dura la
+migración, descrita en [docs/decisiones](docs/decisiones). La versión principal es la de Django.
 
 ## Cómo ejecutarlo
 
@@ -13,17 +16,28 @@ py -m pip install -r requirements.txt
 ```
 
 ```bash
-py app.py
+py manage.py migrate
 ```
 
-Abra <http://127.0.0.1:5000> en el navegador. La primera vez se crea la base de datos con datos de prueba.
+```bash
+py manage.py seed
+```
+
+```bash
+py manage.py runserver
+```
+
+Abra <http://127.0.0.1:8000> en el navegador.
 
 | Comando | Qué hace |
 |---|---|
-| `py app.py` | Inicia el sistema |
-| `py app.py --reiniciar` | Borra la base de datos y la recrea con los datos de prueba |
-| `py app.py --vacio` | Borra la base de datos y deja solo la cuenta `admin` (para cargar datos reales) |
-| `py -m unittest discover tests -v` | Ejecuta las pruebas automáticas |
+| `py manage.py runserver` | Inicia el sistema |
+| `py manage.py migrate` | Crea o actualiza las tablas de la base de datos (`db.sqlite3`) |
+| `py manage.py seed` | Carga los datos de prueba en una base vacía |
+| `py manage.py seed --reemplazar` | Borra **todos** los datos y vuelve a cargar los de prueba |
+| `py manage.py createsuperuser` | Crea una cuenta de administrador (para empezar con datos reales) |
+| `py manage.py test` | Ejecuta las pruebas automáticas del sistema Django |
+| `py -m unittest discover tests` | Ejecuta las pruebas de la versión Flask |
 
 ## Usuarios de prueba
 
@@ -37,14 +51,13 @@ indica con un aviso en pantalla.
 | Estudiante | `estudiante1` … `estudiante12` | `Prueba2026*` |
 | Acudiente | `acudiente1` … `acudiente10` | `Prueba2026*` |
 
-Antes de usar el sistema con datos reales, ejecute `py app.py --vacio` y cambie la contraseña del
-administrador desde **Mi cuenta** (clic en el nombre, arriba a la derecha).
+Para usar el sistema con datos reales, parta de una base sin datos de prueba (ver [INSTALACION.md](INSTALACION.md)).
 
 ## Módulos (según los objetivos específicos del modelo técnico)
 
 1. **Autenticación y gestión de usuarios**
    - Inicio de sesión y control de acceso diferenciado por rol: docente, estudiante, padre/acudiente y
-     administrador. Cada ruta valida el acceso según el perfil.
+     administrador. Cada vista valida el acceso según el perfil (`accounts/permissions.py`).
    - El administrador registra los usuarios; el panel muestra el indicador del proyecto
      (usuarios con acceso al sistema frente a la meta de 280 usuarios potenciales).
 2. **Calificaciones y asistencia**
@@ -59,32 +72,27 @@ administrador desde **Mi cuenta** (clic en el nombre, arriba a la derecha).
 Mitigación de riesgos del modelo técnico: los datos de prueba están claramente identificados y el
 administrador puede crear copias de seguridad de la base de datos.
 
-El documento no detalla el modelo de datos, así que la estructura mínima para poder registrar una nota
-(grados, asignaturas, periodos, actividades evaluativas con porcentaje y notas de 1.0 a 5.0) es una
-decisión de implementación; ajústela al diagrama de base de datos del proyecto si difiere.
-
 ## Estructura
 
 ```
-app.py                 Punto de entrada
-requirements.txt
-sga/
-  __init__.py          Configuración de la aplicación y protección CSRF
-  schema.sql           Modelo de la base de datos
-  db.py                Conexión, inicialización y respaldos
-  auth.py              Inicio de sesión y control de acceso por rol
-  admin.py             Usuarios, estructura académica y respaldos
-  docente.py           Calificaciones, asistencia y anotaciones
-  consulta.py          Informes, reportes y envío a acudientes
-  servicios.py         Reglas académicas (definitivas, desempeño, permisos)
-  seed.py              Datos de prueba
-  templates/, static/  Pantallas y estilos
-tests/test_sga.py      Pruebas automáticas
-instance/              Base de datos (sga.db), clave de sesión y respaldos (se crea sola)
+manage.py                  Punto de entrada de Django
+config/                    Configuración (settings, rutas, páginas de error, ejecutor de pruebas)
+accounts/                  Usuarios, roles, inicio de sesión, permisos y comando seed
+academico/                 Grados, asignaturas, periodos, asignaciones y copias de seguridad
+calificaciones/            Actividades evaluativas, notas y cálculo de la definitiva
+asistencia/                Registro diario de asistencia
+reportes/                  Informes, reportes por grado, anotaciones y envío a acudientes
+templates/, static/        Pantallas y estilos
+docs/decisiones/           Registro de decisiones de arquitectura (ADR)
+
+app.py, sga/, tests/       Versión Flask anterior (referencia)
 ```
+
+Archivos que crea el sistema y que no se suben al repositorio: `db.sqlite3` (base de datos),
+`.secret_key` (clave de sesión propia de cada instalación) y `respaldos/` (copias de seguridad).
 
 ## Protección de datos
 
 El sistema maneja datos personales de menores (Ley 1581 de 2012 y Ley 1098 de 2006): las contraseñas se
-guardan cifradas, cada consulta verifica el permiso del usuario sobre el estudiante, los formularios están
-protegidos contra CSRF y la carpeta `instance/` no debe compartirse ni subirse a repositorios públicos.
+guardan cifradas, cada consulta verifica el permiso del usuario sobre el estudiante y los formularios están
+protegidos contra CSRF. `db.sqlite3` y `respaldos/` no deben compartirse ni subirse a repositorios públicos.

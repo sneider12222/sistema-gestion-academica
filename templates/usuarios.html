@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}Usuarios{% endblock %}
+{% block contenido %}
+<header class="encabezado">
+  <div><p class="sobretitulo">Administración</p><h1>Usuarios</h1></div>
+  <a class="btn btn-primario" href="{% url 'accounts:usuario_nuevo' %}">Crear usuario</a>
+</header>
+<form class="filtros">
+  <select name="rol" onchange="this.form.submit()" aria-label="Rol">
+    <option value="">Todos los roles</option>
+    {% for valor, nombre in roles %}<option value="{{ valor }}" {% if valor == rol %}selected{% endif %}>{{ nombre }}</option>{% endfor %}
+  </select>
+  <input type="search" name="q" value="{{ buscar }}" placeholder="Buscar por nombre, usuario o documento">
+  <button class="btn">Buscar</button>
+</form>
+<div class="tarjeta sin-relleno desplazable">
+<table>
+  <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Documento</th><th>Grado</th><th>Estado</th><th></th></tr></thead>
+  <tbody>
+  {% for u in usuarios %}
+    <tr>
+      <td>{{ u.nombre }}</td><td>{{ u.usuario }}</td><td>{{ u.get_rol_display }}</td>
+      <td>{{ u.documento|default:"—" }}</td>
+      <td>{% if u.es_estudiante %}{{ u.estudiante.grado.nombre|default:"—" }}{% else %}—{% endif %}</td>
+      <td>{% if u.is_active %}<span class="etiqueta ok">Activo</span>{% else %}<span class="etiqueta mal">Inactivo</span>{% endif %}</td>
+      <td class="der"><a href="{% url 'accounts:usuario_editar' u.pk %}">Editar</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7" class="tenue">No hay usuarios con ese criterio.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="tenue pequeno">{{ usuarios|length }} usuario(s).</p>
+{% endblock %}
