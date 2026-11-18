@@ -7,6 +7,16 @@ entorno local (localhost), como lo define el documento.
 La primera versión se construyó en Flask (`app.py` y `sga/`). Se conserva como referencia mientras dura la
 migración, descrita en [docs/decisiones](docs/decisiones). La versión principal es la de Django.
 
+## Documentación
+
+| Documento | Para quién | Contenido |
+|---|---|---|
+| [INSTALACION.md](INSTALACION.md) | Quien instala el sistema | Instalación paso a paso, datos reales, copias de seguridad, actualización y problemas frecuentes |
+| [docs/MANUAL_DE_USUARIO.md](docs/MANUAL_DE_USUARIO.md) | Docentes, estudiantes, acudientes y administradores | Cómo usar cada pantalla según el perfil |
+| [CONTRIBUIR.md](CONTRIBUIR.md) | Equipo de desarrollo | Ramas, commits, pruebas, Pull Requests y cómo deshacer una integración |
+| [.env.example](.env.example) | Quien configura el sistema | Opciones de configuración (todas opcionales) |
+| [docs/decisiones/](docs/decisiones) | Equipo de desarrollo | Registro de decisiones de arquitectura (ADR) |
+
 ## Cómo ejecutarlo
 
 Requiere Python 3.10 o superior. La guía paso a paso para otro computador está en [INSTALACION.md](INSTALACION.md).
