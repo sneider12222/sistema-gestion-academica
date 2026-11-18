@@ -6,20 +6,20 @@
 
 ## Contexto
 
-El esquema original tiene `usuarios.activo` desde el primer día, pero el código del Flask lo usaba
-casi solo como puerta de entrada: el login rechazaba a un usuario inactivo y poco más. La regla de
-visibilidad (`sga/servicios.py:49-60`) filtraba **por rol**, sin mirar el estado, y esa regla estaba
-duplicada en cuatro sitios con cuatro criterios ligeramente distintos: el listado del docente
-(`sga/docente.py:33`) sí añadía `AND u.activo = 1`, mientras que `estudiantes_visibles` —la que
-alimenta las vistas de consulta y de administración— no lo hacía en ninguna de sus cuatro ramas.
+El esquema original tiene `usuarios.activo` desde el primer día. En el Flask, el login rechaza a un
+usuario inactivo y la consulta base de visibilidad (`_SQL_ESTUDIANTES` en `sga/servicios.py`) ya
+filtra `WHERE u.activo = 1` para las cuatro ramas de `estudiantes_visibles`; el listado del docente
+(`sga/docente.py`) y el reporte por grado (`sga/consulta.py`) aplican el mismo filtro por su cuenta.
 
-El efecto observable: un estudiante retirado —con la cuenta desactivada— aparecía en el listado de
-estudiantes y en el reporte del grado de cualquier administrador, con sus notas y su porcentaje de
-asistencia, y desaparecía del listado del docente. Dos pantallas del mismo sistema daban respuestas
-distintas sobre la misma persona.
+El comportamiento era correcto, pero la regla estaba escrita en varios sitios y cada uno podía
+desviarse de los demás al modificarlo.
 
-Al unificar la regla en `accounts/permissions.py` (commit `73432e0`) había que decidir
-qué hacer con ese caso, porque la tabla de estrategias por rol obliga a definirlo una sola vez.
+**Corrección 2026-11-17 (auditoría de ramas):** la primera versión de este ADR afirmaba que
+`estudiantes_visibles` del Flask no filtraba por estado. Revisado el código de `main`, sí lo hace
+desde el commit inicial; se corrige el contexto. La decisión no cambia.
+
+Al unificar la regla en `accounts/permissions.py` (commit `73432e0`) había que fijarla en un único
+lugar, porque la tabla de estrategias por rol obliga a definirla una sola vez.
 
 ## Decisión
 

@@ -6,3 +6,5 @@ __pycache__/
 .percyval/
 db.sqlite3
 .env
+.secret_key
+respaldos/

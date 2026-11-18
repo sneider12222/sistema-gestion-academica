@@ -1,5 +1,6 @@
 """Configuración del proyecto Django del Sistema de Gestión Académica."""
 
+import secrets
 from pathlib import Path
 
 import environ
@@ -11,13 +12,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(BASE_DIR / ".env")
 
-# El default es SOLO para desarrollo local: en cualquier otro entorno se define
-# SECRET_KEY por variable de entorno.
-SECRET_KEY = env(
-    "SECRET_KEY",
-    default="django-insecure-solo-desarrollo-local-cambiar-en-produccion",
-)
-DEBUG = env.bool("DEBUG", default=True)
+
+
+def _clave_local():
+    """Clave aleatoria propia de cada instalación, guardada fuera del repositorio.
+
+    Evita una SECRET_KEY fija y conocida en el código. Se crea la primera vez
+    que arranca el sistema; si se define SECRET_KEY en el entorno, tiene
+    prioridad.
+    """
+    ruta = BASE_DIR / ".secret_key"
+    if not ruta.exists():
+        ruta.write_text(secrets.token_urlsafe(50), encoding="utf-8")
+    return ruta.read_text(encoding="utf-8").strip()
+
+
+SECRET_KEY = env("SECRET_KEY", default=None) or _clave_local()
+
+# DEBUG queda desactivado por defecto: con DEBUG=True Django muestra páginas
+# técnicas de error que revelan rutas y configuración. Para desarrollar se
+# activa con DEBUG=True en el entorno o en .env.
+DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
 
 # ADR 0002: el motor es configuración, no código. SQLite por defecto; para un
@@ -75,6 +90,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "config.urls"
+TEST_RUNNER = "config.test_runner.AppsDelProyectoRunner"
 
 TEMPLATES = [
     {
@@ -87,6 +103,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "accounts.context_processors.institucion",
             ],
         },
     },
@@ -121,6 +138,31 @@ STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_URL = "/entrar/"
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/entrar/"
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "accounts:inicio"
+LOGOUT_REDIRECT_URL = "accounts:login"
+
+# Sesiones y cookies (mismos criterios que la versión Flask)
+SESSION_COOKIE_AGE = 2 * 60 * 60
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = True
+X_FRAME_OPTIONS = "DENY"
+CSRF_FAILURE_VIEW = "config.errores.csrf_fallido"
+
+# En localhost se usa HTTP. Si algún día se publica detrás de HTTPS, HTTPS=True
+# activa cookies seguras, redirección y HSTS (lo que pide `check --deploy`).
+if env.bool("HTTPS", default=False):
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=3600)
+
+# Copias de seguridad de la base SQLite (riesgo 5 del modelo técnico)
+RESPALDOS_DIR = BASE_DIR / "respaldos"
+
+MESSAGE_TAGS = {
+    40: "error",  # messages.ERROR
+    25: "ok",  # messages.SUCCESS
+    30: "aviso",  # messages.WARNING
+}

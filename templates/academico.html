@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block titulo %}Gestión académica{% endblock %}
+{% block contenido %}
+<header class="encabezado">
+  <div><p class="sobretitulo">Administración</p><h1>Gestión académica</h1></div>
+</header>
+
+<section class="tarjeta">
+  <h2>Asignación de docentes</h2>
+  <p class="tenue">Qué docente dicta cada asignatura en cada grado. Guardar una combinación existente cambia el docente.</p>
+  <form method="post" class="filtros">
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="asignacion">
+    <select name="grado_id" required aria-label="Grado"><option value="">Grado</option>{% for x in grados %}<option value="{{ x.pk }}">{{ x.nombre }}</option>{% endfor %}</select>
+    <select name="asignatura_id" required aria-label="Asignatura"><option value="">Asignatura</option>{% for x in asignaturas %}<option value="{{ x.pk }}">{{ x.nombre }}</option>{% endfor %}</select>
+    <select name="docente_id" required aria-label="Docente"><option value="">Docente</option>{% for x in docentes %}<option value="{{ x.pk }}">{{ x.nombre }}</option>{% endfor %}</select>
+    <button class="btn btn-primario">Asignar</button>
+  </form>
+  <div class="desplazable">
+  <table>
+    <thead><tr><th>Grado</th><th>Asignatura</th><th>Docente</th><th></th></tr></thead>
+    <tbody>
+    {% for a in asignaciones %}
+      <tr><td>{{ a.grado.nombre }}</td><td>{{ a.asignatura.nombre }}</td><td>{{ a.docente.nombre }}</td>
+        <td class="der">
+          <a href="{% url 'calificaciones:calificaciones' a.pk %}">Calificaciones</a> ·
+          <a href="{% url 'asistencia:asistencia' a.pk %}">Asistencia</a> ·
+          {% include "_eliminar.html" with tabla="asignaciones" id=a.pk %}
+        </td></tr>
+    {% empty %}
+      <tr><td colspan="4" class="tenue">Sin asignaciones.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<div class="rejilla tres">
+  <section class="tarjeta">
+    <h2>Grados</h2>
+    <form method="post" class="filtros">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="grado">
+      <input name="nombre" placeholder="Ej. 8°A" required aria-label="Nombre del grado">
+      <button class="btn">Agregar</button>
+    </form>
+    <table><tbody>
+      {% for x in grados %}<tr><td>{{ x.nombre }} <span class="tenue">· {{ x.n_estudiantes }} est.</span></td><td class="der">{% include "_eliminar.html" with tabla="grados" id=x.pk %}</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Asignaturas</h2>
+    <form method="post" class="filtros">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="asignatura">
+      <input name="nombre" placeholder="Ej. Sociales" required aria-label="Nombre de la asignatura">
+      <button class="btn">Agregar</button>
+    </form>
+    <table><tbody>
+      {% for x in asignaturas %}<tr><td>{{ x.nombre }}</td><td class="der">{% include "_eliminar.html" with tabla="asignaturas" id=x.pk %}</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Periodos</h2>
+    <form method="post" class="apilado">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="periodo">
+      <input name="nombre" placeholder="Ej. Periodo 1 - 2027" required aria-label="Nombre del periodo">
+      <label>Inicio <input type="date" name="fecha_inicio" required></label>
+      <label>Fin <input type="date" name="fecha_fin" required></label>
+      <button class="btn">Agregar</button>
+    </form>
+    <table><tbody>
+      {% for x in periodos %}<tr><td>{{ x.nombre }}<br><span class="tenue pequeno">{{ x.fecha_inicio|date:"Y-m-d" }} a {{ x.fecha_fin|date:"Y-m-d" }}</span></td><td class="der">{% include "_eliminar.html" with tabla="periodos" id=x.pk %}</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+</div>
+{% endblock %}
